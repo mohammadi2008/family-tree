@@ -1,0 +1,5 @@
+Cairo font (subset: Arabic + Latin, variable weight 200–1000)
+Copyright 2009 The Cairo Project Authors (https://github.com/Gue3bara/Cairo)
+Licensed under the SIL Open Font License, Version 1.1: https://openfontlicense.org
+The font is self-hosted so the site works with a strict Content-Security-Policy
+and so canvas / PDF rendering uses exactly the same glyphs.

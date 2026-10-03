@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ar" dir="rtl" data-theme="crystal">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#eef2ff">
+  <meta name="description" content="شجرة العائلة التفاعلية: تصفح الأجداد والأبناء والأحفاد وصلات القرابة.">
+  <title>شجرة العائلة</title>
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="preload" href="/fonts/cairo-arabic.woff" as="font" type="font/woff" crossorigin>
+  <link rel="stylesheet" href="/css/styles.css">
+  <script type="module" src="/js/app.js"></script>
+</head>
+<body>
+  <!-- Ambient crystal background -->
+  <div class="aurora" aria-hidden="true">
+    <span class="orb o1"></span><span class="orb o2"></span><span class="orb o3"></span><span class="facets"></span>
+  </div>
+
+  <header class="topbar glass" id="topbar">
+    <button class="icon-btn" id="btn-menu" type="button" aria-label="القائمة" aria-controls="drawer" aria-expanded="false"><i data-icon="menu"></i></button>
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true"><i data-icon="tree"></i></span>
+      <div class="brand-text">
+        <h1 id="site-title">شجرة العائلة</h1>
+        <span class="people-count" id="people-count"></span>
+      </div>
+    </div>
+    <div class="search" role="search">
+      <i data-icon="search" class="search-ico"></i>
+      <input id="search-input" type="search" role="combobox" placeholder="ابحث عن اسم…" autocomplete="off" aria-label="البحث بالاسم"
+             aria-controls="search-results" aria-expanded="false" aria-autocomplete="list" enterkeyhint="search">
+      <ul id="search-results" class="search-results glass" role="listbox" aria-label="نتائج البحث" hidden></ul>
+    </div>
+    <span class="admin-badge" id="admin-badge" hidden>وضع المدير</span>
+    <button class="icon-btn only-mobile" id="btn-search" type="button" aria-label="بحث"><i data-icon="search"></i></button>
+  </header>
+
+  <main class="stage" id="stage">
+    <canvas id="tree" tabindex="0" aria-label="شجرة العائلة التفاعلية: اسحب للتحريك، واستخدم الإصبعين أو عجلة الفأرة للتكبير، واضغط على أي شخص لعرض بياناته."></canvas>
+    <div id="state-overlay" class="state-overlay" hidden></div>
+  </main>
+
+  <nav class="zoom-dock glass" id="zoom-dock" aria-label="أدوات العرض">
+    <button class="icon-btn" id="z-map" type="button" aria-label="الخريطة المصغرة" title="الخريطة المصغرة" aria-pressed="true"><i data-icon="map"></i></button>
+  </nav>
+
+  <div class="minimap glass" id="minimap-wrap"><canvas id="minimap" aria-label="خريطة مصغرة للشجرة. اضغط للانتقال."></canvas></div>
+
+  <!-- Side menu -->
+  <div class="scrim" id="drawer-scrim" hidden></div>
+  <aside class="drawer glass" id="drawer" aria-hidden="true" aria-label="القائمة الرئيسية">
+    <div class="drawer-head">
+      <h2>القائمة</h2>
+      <button class="icon-btn" id="drawer-close" type="button" aria-label="إغلاق القائمة"><i data-icon="close"></i></button>
+    </div>
+    <div class="drawer-body">
+      <section class="drawer-section">
+        <h3><i data-icon="palette"></i> السمة</h3>
+        <div class="theme-grid" id="theme-grid"></div>
+      </section>
+
+      <section class="drawer-section">
+        <h3><i data-icon="calendar"></i> عرض التواريخ</h3>
+        <div class="seg" id="seg-cal" role="radiogroup" aria-label="تقويم العرض">
+          <button type="button" class="seg-btn" role="radio" data-value="j">هجري شمسي</button>
+          <button type="button" class="seg-btn" role="radio" data-value="g">ميلادي</button>
+        </div>
+        <h3 class="mt"><i data-icon="digits"></i> الأرقام</h3>
+        <div class="seg" id="seg-digits" role="radiogroup" aria-label="شكل الأرقام">
+          <button type="button" class="seg-btn" role="radio" data-value="ar">٠١٢٣</button>
+          <button type="button" class="seg-btn" role="radio" data-value="latin">0123</button>
+        </div>
+      </section>
+
+      <section class="drawer-section">
+        <h3><i data-icon="settings"></i> الأدوات</h3>
+        <button class="menu-item" id="m-pdf" type="button"><i data-icon="pdf"></i><span>تصدير PDF</span></button>
+      </section>
+
+      <section class="drawer-section">
+        <h3><i data-icon="key"></i> الإدارة</h3>
+        <button class="menu-item" id="m-login" type="button" data-admin="out"><i data-icon="login"></i><span>دخول المدير</span></button>
+        <div data-admin="in" hidden>
+          <button class="menu-item" id="m-add-root" type="button"><i data-icon="plus"></i><span>إضافة الشخص الأول</span></button>
+          <button class="menu-item" id="m-settings" type="button"><i data-icon="settings"></i><span>إعدادات الموقع</span></button>
+          <button class="menu-item" id="m-password" type="button"><i data-icon="key"></i><span>تغيير كلمة المرور</span></button>
+          <button class="menu-item" id="m-export" type="button"><i data-icon="download"></i><span>تنزيل نسخة احتياطية (JSON)</span></button>
+          <button class="menu-item" id="m-import" type="button"><i data-icon="upload"></i><span>استعادة من نسخة احتياطية</span></button>
+          <button class="menu-item danger" id="m-logout" type="button"><i data-icon="logout"></i><span>تسجيل الخروج</span></button>
+        </div>
+      </section>
+
+      <section class="drawer-section">
+        <a class="menu-item whatsapp" data-whatsapp hidden target="_blank" rel="noopener noreferrer"><i data-icon="whatsapp"></i><span>تواصل مع المدير (واتساب)</span></a>
+      </section>
+      <p class="drawer-foot">اضغط على أي شخص لعرض بياناته · اسحب للتحريك · كبّر بالإصبعين</p>
+    </div>
+  </aside>
+
+  <section class="details glass" id="details" aria-label="تفاصيل الشخص" hidden></section>
+  <div class="action-card glass" id="action-card" role="dialog" aria-label="إجراءات الشخص" hidden></div>
+  <div id="modal-root"></div>
+  <div id="toast-root" class="toast-root" aria-live="polite"></div>
+  <noscript><p class="noscript">يتطلب هذا الموقع تفعيل JavaScript.</p></noscript>
+</body>
+</html>

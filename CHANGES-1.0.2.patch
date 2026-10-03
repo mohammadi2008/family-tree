@@ -1,0 +1,1026 @@
+--- a/family-tree/README.md
++++ b/family-tree/README.md
+@@ -1,4 +1,8 @@
+ # شجرة العائلة · Interactive Arabic Family Tree
++
++**Pre-release review 1.0.2:** see `RELEASE-REVIEW-FA.md` for the fixes,
++verified test results, limitations and deployment checklist. No database schema
++change is needed beyond migrations 0001 and 0002.
+ 
+ A RTL Arabic family-tree website designed for **Cloudflare's free plan**:
+ **Cloudflare Pages** (hosting) + **Pages Functions** (API) + **Cloudflare D1** (SQLite database, photos included).
+--- a/family-tree/RELEASE-REVIEW-FA.md
++++ b/family-tree/RELEASE-REVIEW-FA.md
+@@ -0,0 +1,152 @@
++# گزارش بررسی پیش از انتشار، نسخه 1.0.2
++
++## وضعیت
++
++نسخه اصلی و داده‌های نمونه بررسی شدند و ایرادهای قابل بازتولید اصلاح شدند.
++این گزارش تأیید انتشار روی Cloudflare نیست. هیچ تغییری روی حساب،
++دیتابیس یا سایت زنده شما انجام نشده است.
++
++ظاهر عربی، راست‌به‌چپ بودن، ساختار درخت و فناوری فعلی پروژه حفظ شده‌اند.
++مهاجرت جدید دیتابیس لازم نیست؛ مهاجرت‌های 0001 و 0002 همچنان ضروری‌اند.
++
++## اصلاحات
++
++### ورود، نشست و حریم خصوصی
++
++- خروج ناموفق دیگر به‌عنوان خروج موفق اعلام نمی‌شود.
++- پس از خروج موفق، تلفن و یادداشت خصوصی از داده‌های فعال مرورگر حذف،
++  پنل‌ها بسته و درخت عمومی بازسازی می‌شود، حتی اگر درخواست بعدی قطع شود.
++- نمایش یادداشت در پنل جزئیات، مستقل از پاک‌سازی سمت سرور، فقط برای مدیر
++  مجاز است. داده قدیمی یا نامعتبر دیگر موجب نمایش یادداشت در نمای عمومی نمی‌شود.
++- هنگام تبدیل نشست مدیر به بازدیدکننده، پنل اقدامات مدیر بسته می‌شود.
++- پاسخ قدیمی یک درخواست بارگذاری نمی‌تواند پاسخ جدیدتر را بازنویسی کند؛
++  خطای درخواست قدیمی نیز نمی‌تواند صفحه سالم جدید را به حالت خطا ببرد.
++- هش ذخیره‌شده رمز با قالب، تعداد تکرار یا طول نامعتبر به‌جای ایجاد خطای
++  پیش‌بینی‌نشده، نامعتبر تشخیص داده می‌شود.
++- نشست در همان ثانیه انقضا نامعتبر می‌شود.
++- تغییر رمز هم‌زمان، با کنترل نسخه داخل تراکنش، نمی‌تواند رمز تغییرکرده
++  توسط درخواست دیگر را بی‌صدا بازنویسی کند.
++- نشست صادرشده هنگام ورود یا تغییر رمز به نسخه رمز بررسی‌شده متصل است؛
++  ورود هم‌زمان با تغییر رمز، اعتبار نسخه جدید را به رمز قبلی نمی‌دهد.
++- پاسخ درخت از یک snapshot مشترک داده، تنظیمات و نسخه ساخته می‌شود.
++  اطلاعات خصوصی درخت با Cache-Control: private, no-store بازگردانده می‌شوند.
++
++### صحت داده و عملیات
++
++- تاریخ ازدواج بعد از تاریخ فوت قطعی هر یک از زوجین پذیرفته نمی‌شود.
++  این کنترل در ایجاد، ویرایش و بازیابی نسخه پشتیبان مشترک است.
++- ویرایش تاریخ فوت نمی‌تواند یک ازدواج موجود را از نظر زمانی نامعتبر کند.
++- تولد دقیق فرزند در همان روز تولد والد پذیرفته نمی‌شود.
++  برای تاریخ‌های ناقص، فقط ناسازگاری قطعی رد می‌شود.
++- مقدار ناشناخته mode در درخواست حذف، به‌جای تبدیل خودکار به حذف تک‌نفره،
++  رد می‌شود و داده‌ها دست‌نخورده می‌مانند.
++- نشانگر صفحه‌بندی عکس‌های پشتیبان دیگر با تبدیل عدد 32 بیتی سرریز
++  نمی‌کند؛ مقدار منفی، غیرعددی، اعشاری یا خارج از محدوده رد می‌شود.
++- تنظیمات عنوان و واتساب در خروجی پشتیبان در snapshot خود داده خوانده می‌شوند.
++
++### شبکه و رابط کاربری
++
++- پاسخ موفق HTTP با JSON خراب، null، آرایه یا HTML، موفقیت API محسوب نمی‌شود.
++- کلید جلوگیری از ایجاد تکراری، در پاسخ موفق ولی ناقص پاک نمی‌شود.
++  تکرار همان درخواست می‌تواند همان نتیجه را بدون ساخت رکورد دوم دریافت کند.
++- زمان انتظار درخواست شبکه، شامل خواندن بدنه پاسخ، 30 ثانیه است.
++  پیام timeout صریحاً هشدار می‌دهد که ممکن است عملیات روی سرور ذخیره شده باشد.
++- ابزارهای PDF، بازکردن فروع و تنظیمات، قبل از بارگذاری داده به null دسترسی نمی‌زنند.
++- مودال پیشرفت بدون دکمه نیز هدف فوکوس دارد و Tab از آن خارج نمی‌شود.
++- جستجو دارای نقش combobox و aria-activedescendant برای گزینه فعال است.
++- لینک‌های واتساب پیش از بارگذاری تنظیمات مخفی‌اند و شماره شخصی پیش‌فرض
++  در HTML ندارند. شماره از تنظیمات مدیر می‌آید.
++- فایل‌های JavaScript و CSS بدون نام نسخه‌دار، پس از انتشار دوباره
++  اعتبارسنجی می‌شوند تا نسخه قدیمی یک ساعت تازه تلقی نشود.
++- بررسی database_id تنها قالب واقعی UUID را می‌پذیرد.
++  مرحله predeploy علاوه بر تنظیمات، syntax و importهای پروژه را بررسی می‌کند.
++
++## آزمون‌های انجام‌شده
++
++- 48 تست خودکار Node: همگی موفق، صفر شکست و صفر تست ردشده.
++- تست‌ها شامل SQLite واقعی با adapter محلی D1، تراکنش، rollback،
++  بازیابی مرحله‌ای، جلوگیری از ایجاد تکراری، CSRF، حریم خصوصی،
++  تاریخ شمسی/میلادی، کنترل‌های DOM و هم‌زمانی تغییر رمز هستند.
++- بررسی syntax و import نسبی: 56 فایل JavaScript موفق.
++- bundle آزمایشی با esbuild: هر 15 ورودی Cloudflare Functions موفق.
++- تست ساخت PDF، ساختار و آدرس‌دهی xref را بررسی می‌کند، نه خوانایی
++  بصری متن عربی یا کیفیت عکس در فایل چاپی.
++- کنترل انتشار، database_id نمونه فعلی را همان‌طور که باید رد کرد.
++
++تست‌های قبلی: 32 تست موفق. تست‌های جدید برای خطاهای قابل بازتولید و کنترل‌های
++رگرسیون اضافه شده‌اند. هفت تست اولیه رگرسیون پیش از اصلاح شکست داشتند.
++فایل `TEST-RESULTS-1.0.2.txt` خروجی اجرای نهایی را نگه می‌دارد.
++
++## محدودیت‌های بررسی
++
++محیط اجرا اینترنت ندارد؛ نصب بسته و دریافت مرورگر جدید ممکن نبود.
++Node و Python موجود بودند، اما npm و فایل اجرایی Chromium موجود نبودند.
++بنابراین آزمون واقعی مرورگر دسکتاپ/موبایل اجرا نشد و هیچ تصویر یا
++تأیید ظاهری از نتیجه ادعا نمی‌شود. فایل `tests/browser-smoke.mjs` برای
++اجرای این سناریوها روی محیط مجهز اضافه شده، اما هنوز تأییدشده نیست.
++
++بسته Playwright موجود بود ولی مرورگر نصب‌شده‌ای برای اجرای آن در دسترس نبود.
++تست DOM سبک، جایگزین آزمون واقعی فوکوس، Canvas، لمس، Safari یا رندر PDF نیست.
++bundle موفق نیز جایگزین آزمون Wrangler/Cloudflare D1 نیست.
++
++هم‌زمانی تغییر رمز و بازیابی پوشش داده شده است؛ ویرایش هم‌زمان اطلاعات
++افراد هنوز کنترل نسخه رکورد ندارد و آخرین ویرایش می‌تواند ویرایش قبلی را
++بازنویسی کند. برای استفاده چندمدیری، پیش از انتشار کنترل optimistic locking
++و سناریوهای هم‌زمانی روابط خانوادگی باید جداگانه تکمیل شوند.
++
++این سرویس عمداً عمومی است: نام، تاریخ‌ها، روابط، شغل و عکس افراد برای
++بازدیدکنندگان قابل مشاهده‌اند. فقط تلفن و یادداشت خصوصی پنهان هستند.
++اگر درخت باید خانوادگی و خصوصی باشد، انتشار عمومی این نسخه مناسب نیست؛
++کنترل دسترسی کل سایت باید پیش از انتشار اضافه شود.
++
++اعتبارسنجی عکس در سرور حجم، نوع و امضای اولیه فایل را کنترل می‌کند،
++نه سلامت کامل decode تصویر. تأیید بصری عکس‌ها باید در مرورگر انجام شود.
++راهنمای قبلی سهمیه‌های Cloudflare در این بررسی از منابع زنده بازبینی نشده است.
++
++## دستورهای بازتولید
++
++Node 22 یا جدیدتر و Python 3 لازم است:
++
++```sh
++node tests/check.mjs
++node --test tests/*.test.mjs
++node tests/check-config.mjs
++```
++
++دستور آخر تا قرار دادن database_id واقعی عمداً ناموفق است.
++
++برای تست اختیاری مرورگر در رایانه دارای اینترنت:
++
++```sh
++npm install
++npm install --no-save playwright@1.58.2
++npx playwright install chromium
++npm run test:browser
++```
++
++این تست به سایت زنده وصل نمی‌شود؛ یک سرور محلی و دیتابیس موقت داده نمونه
++می‌سازد. هیچ رمز واقعی خودتان را در فایل تست قرار ندهید.
++
++## چک‌لیست لازم پیش از انتشار واقعی
++
++1. فایل‌های اصلاح‌شده را جایگزین کنید و تست‌های بالا را اجرا کنید.
++2. شناسه واقعی D1 را در wrangler.toml بگذارید؛ مقدار نمونه عمداً دست‌نخورده است.
++3. از دیتابیس موجود نسخه پشتیبان بگیرید و هر دو migration را در D1 اعمال کنید.
++4. ADMIN_PASSWORD قوی و SESSION_SECRET تصادفی حداقل 32 کاراکتری را
++   به‌صورت Secret در Cloudflare تنظیم کنید؛ نه در مخزن عمومی.
++5. روی preview ابتدا با درخت خالی و سپس داده نمونه آزمایش کنید. داده seed
++   را روی دیتابیس دارای اطلاعات واقعی اجرا نکنید.
++6. ورود، رمز اشتباه، محدودیت تلاش، تغییر رمز، بی‌اعتبارشدن نشست قبلی،
++   خروج و خطای شبکه را در مرورگر آزمایش کنید.
++7. ایجاد/ویرایش شخص، همسر، والد و فرزند، عکس، حذف تک‌نفره و شاخه،
++   پشتیبان/بازیابی و خطای بازیابی را روی preview تست کنید.
++8. در موبایل و دسکتاپ، جستجو، بزرگ‌نمایی، لمس، فروع بسته، RTL و
++   خوانایی PDF با عکس را بررسی کنید؛ خصوصاً Safari/iOS.
++9. شماره واتساب خودتان را در تنظیمات وارد کنید؛ مقدار خالی لینک را مخفی می‌کند.
++10. دسترسی عمومی داده‌های خانوادگی را تأیید و سپس انتشار نهایی را انجام دهید.
++
++## فایل‌های همراه
++
++- `TEST-RESULTS-1.0.2.txt`: خروجی تست نهایی.
++- `CHANGES-1.0.2.patch`: تفاوت فایل‌ها با ZIP ارسالی، برای بازبینی.
++- فایل‌های تست جدید در `tests/`: قابل تکرار و نگه‌داری همراه پروژه.
+--- a/family-tree/functions/api/admin/export.js
++++ b/family-tree/functions/api/admin/export.js
+@@ -4,7 +4,7 @@
+  * The browser stitches the parts into one JSON backup file, so the Worker never
+  * has to hold every photo in memory at once.
+  */
+-import { HttpError, json } from '../../../src/server/http.js';
++import { HttpError, json, parseId } from '../../../src/server/http.js';
+ import { getDb, getSetting, PERSON_COLUMNS, MARRIAGE_COLUMNS } from '../../../src/server/db.js';
+ import { requireAdmin } from '../../../src/server/auth.js';
+ 
+@@ -18,18 +18,20 @@
+ 
+   if (part === 'data') {
+     const version = (await getSetting(db,'data_version')) || '0';
+-    const [p, m, c] = await db.batch([
++    const [p, m, c, settings] = await db.batch([
+       db.prepare(`SELECT ${PERSON_COLUMNS.join(', ')} FROM persons ORDER BY id`),
+       db.prepare(`SELECT ${MARRIAGE_COLUMNS.join(', ')} FROM marriages ORDER BY id`),
+       db.prepare('SELECT COUNT(*) AS n FROM photos'),
++      db.prepare("SELECT key,value FROM settings WHERE key IN ('site_title','whatsapp_number')"),
+     ]);
+     if (version !== (await getSetting(db,'data_version'))) throw new HttpError(409,'تغيرت البيانات أثناء التصدير. أعد المحاولة.');
++    const config = Object.fromEntries(settings.results.map(r => [r.key,r.value]));
+     return json({
+       app: 'family-tree', format: 1,
+       exportedAt: new Date().toISOString(),
+       version,
+-      whatsappNumber: (await getSetting(db,'whatsapp_number')) || '',
+-      siteTitle: (await getSetting(db, 'site_title')) || 'شجرة العائلة',
++      whatsappNumber: config.whatsapp_number || '',
++      siteTitle: config.site_title || 'شجرة العائلة',
+       persons: p.results, marriages: m.results, photoCount: c.results[0].n,
+     });
+   }
+@@ -37,7 +39,8 @@
+   if (part === 'photos') {
+     const expected = url.searchParams.get('version');
+     if (!expected || expected !== (await getSetting(db,'data_version'))) throw new HttpError(409,'تغيرت البيانات أثناء التصدير. أعد المحاولة.');
+-    const after = Math.max(0, Number(url.searchParams.get('after') || 0) | 0);
++    const cursor = url.searchParams.get('after');
++    const after = cursor == null || cursor === '0' ? 0 : parseId(cursor, 'مؤشر الصور');
+     const { results } = await db.prepare(
+       'SELECT person_id, mime, data FROM photos WHERE person_id > ?1 ORDER BY person_id LIMIT ?2'
+     ).bind(after, PHOTO_PAGE).all();
+--- a/family-tree/functions/api/auth/login.js
++++ b/family-tree/functions/api/auth/login.js
+@@ -1,6 +1,6 @@
+ /** POST /api/auth/login  { password } — rate limited (5 failures / 15 min / IP). */
+ import { HttpError, json, readJson } from '../../../src/server/http.js';
+-import { getDb } from '../../../src/server/db.js';
++import { getDb, getSetting } from '../../../src/server/db.js';
+ import { checkAdminPassword, createSessionCookie } from '../../../src/server/auth.js';
+ import { assertNotLimited, clearFailures, clientKey, recordFailure } from '../../../src/server/ratelimit.js';
+ 
+@@ -9,11 +9,14 @@
+   const key = clientKey(context.request, 'login');
+   await assertNotLimited(db, key);
+   const body = await readJson(context.request, 4096);
++  // Bind the issued cookie to the password version being checked. A concurrent
++  // password reset cannot upgrade a login with the old password to a new session.
++  const pv = (await getSetting(db, 'password_ver')) || '0';
+   const ok = await checkAdminPassword(context.env, db, body.password);
+   if (!ok) {
+     await recordFailure(db, key);
+     throw new HttpError(401, 'كلمة المرور غير صحيحة.');
+   }
+   await clearFailures(db, key);
+-  return json({ ok: true, isAdmin: true }, { headers: { 'Set-Cookie': await createSessionCookie(context) } });
++  return json({ ok: true, isAdmin: true }, { headers: { 'Set-Cookie': await createSessionCookie(context, pv) } });
+ }
+--- a/family-tree/functions/api/auth/password.js
++++ b/family-tree/functions/api/auth/password.js
+@@ -4,7 +4,7 @@
+  * invalidates every other session. A fresh cookie is issued to the caller.
+  */
+ import { HttpError, json, readJson } from '../../../src/server/http.js';
+-import { getDb, getSetting, setSettingStmt } from '../../../src/server/db.js';
++import { getDb, getSetting } from '../../../src/server/db.js';
+ import { checkAdminPassword, createSessionCookie, hashPassword, requireAdmin } from '../../../src/server/auth.js';
+ import { assertNotLimited, clearFailures, clientKey, recordFailure } from '../../../src/server/ratelimit.js';
+ 
+@@ -14,6 +14,7 @@
+   const key = clientKey(context.request, 'pw');
+   await assertNotLimited(db, key);
+   const body = await readJson(context.request, 4096);
++  const previousVersion = (await getSetting(db, 'password_ver')) || '0';
+   const next = typeof body.next === 'string' ? body.next : '';
+   if (next.length < 8) throw new HttpError(400, 'كلمة المرور الجديدة يجب ألا تقل عن 8 أحرف.');
+   if (next.length > 128) throw new HttpError(400, 'كلمة المرور الجديدة طويلة جدًا.');
+@@ -23,7 +24,17 @@
+   }
+   await clearFailures(db, key);
+   const hash = await hashPassword(next, context.env);
+-  const pv = Number((await getSetting(db, 'password_ver')) || '0') + 1;
+-  await db.batch([setSettingStmt(db, 'password_hash', hash), setSettingStmt(db, 'password_ver', pv)]);
+-  return json({ ok: true }, { headers: { 'Set-Cookie': await createSessionCookie(context) } });
++  const pv = String(Number(previousVersion) + 1);
++  // Compare-and-set in the same transaction as the hash update. If another
++  // reset wins, neither the password nor the version may be overwritten.
++  const results = await db.batch([
++    db.prepare("INSERT INTO settings(key,value) SELECT 'password_hash',?1 " +
++      "WHERE COALESCE((SELECT value FROM settings WHERE key='password_ver'),'0')=?2 " +
++      "ON CONFLICT(key) DO UPDATE SET value=excluded.value").bind(hash,previousVersion),
++    db.prepare("INSERT INTO settings(key,value) SELECT 'password_ver',?1 " +
++      "WHERE COALESCE((SELECT value FROM settings WHERE key='password_ver'),'0')=?2 " +
++      "ON CONFLICT(key) DO UPDATE SET value=excluded.value").bind(pv,previousVersion),
++  ]);
++  if (!results[0].meta.changes) throw new HttpError(409, 'تغيرت كلمة المرور أثناء الحفظ. سجّل الدخول مجددًا.');
++  return json({ ok: true }, { headers: { 'Set-Cookie': await createSessionCookie(context, pv) } });
+ }
+--- a/family-tree/functions/api/persons/[id].js
++++ b/family-tree/functions/api/persons/[id].js
+@@ -69,7 +69,8 @@
+   await requireAdmin(context);
+   const id = parseId(context.params.id);
+   const db = getDb(context.env);
+-  const mode = new URL(context.request.url).searchParams.get('mode') === 'branch' ? 'branch' : 'single';
++  const mode = new URL(context.request.url).searchParams.get('mode') || 'single';
++  if (!['single', 'branch'].includes(mode)) throw new HttpError(400, 'نوع الحذف غير صالح.');
+   const lite = await loadLiteGraph(db);
+   requirePerson(lite, id);
+ 
+--- a/family-tree/functions/api/tree.js
++++ b/family-tree/functions/api/tree.js
+@@ -4,33 +4,35 @@
+  * Uses an ETag based on the data version so repeat visits are cheap.
+  */
+ import { json } from '../../src/server/http.js';
+-import { getDb, getSetting, PERSON_COLUMNS, MARRIAGE_COLUMNS } from '../../src/server/db.js';
++import { getDb, PERSON_COLUMNS, MARRIAGE_COLUMNS } from '../../src/server/db.js';
+ import { isAdmin } from '../../src/server/auth.js';
+ 
+ export async function onRequestGet(context) {
+   const db = getDb(context.env);
+   const admin = await isAdmin(context);
+-  const version = (await getSetting(db, 'data_version')) || '0';
++  // Data and the revision/settings that describe it share one D1 snapshot.
++  const [p, m, t] = await db.batch([
++    db.prepare(`SELECT ${PERSON_COLUMNS.join(', ')} FROM persons ORDER BY id`),
++    db.prepare(`SELECT ${MARRIAGE_COLUMNS.join(', ')} FROM marriages ORDER BY id`),
++    db.prepare("SELECT key,value FROM settings WHERE key IN ('site_title','whatsapp_number','data_version')"),
++  ]);
++  const config = Object.fromEntries(t.results.map(r => [r.key,r.value]));
++  const version = config.data_version || '0';
+   const etag = `W/"v${version}-${admin ? 'a' : 'p'}"`;
+-  const cacheHeaders = { ETag: etag, 'Cache-Control': 'private, no-cache', Vary: 'Cookie' };
++  const cacheHeaders = { ETag: etag, 'Cache-Control': 'private, no-store', Vary: 'Cookie' };
+ 
+   if (context.request.headers.get('If-None-Match') === etag) {
+     return new Response(null, { status: 304, headers: cacheHeaders });
+   }
+ 
+-  const [p, m, t] = await db.batch([
+-    db.prepare(`SELECT ${PERSON_COLUMNS.join(', ')} FROM persons ORDER BY id`),
+-    db.prepare(`SELECT ${MARRIAGE_COLUMNS.join(', ')} FROM marriages ORDER BY id`),
+-    db.prepare("SELECT value FROM settings WHERE key = 'site_title'"),
+-  ]);
+   const persons = admin ? p.results : p.results.map((r) => ({ ...r, phone: '' }));
+   // Notes are private to the admin, just like phone numbers.
+   if (!admin) for (const p of persons) p.notes = '';
+   return json({
+     version: Number(version),
+     isAdmin: admin,
+-    siteTitle: (t.results[0] && t.results[0].value) || 'شجرة العائلة',
+-    whatsappNumber: (await getSetting(db,'whatsapp_number')) || '',
++    siteTitle: config.site_title || 'شجرة العائلة',
++    whatsappNumber: config.whatsapp_number || '',
+     persons,
+     marriages: m.results,
+   }, { headers: cacheHeaders });
+--- a/family-tree/package.json
++++ b/family-tree/package.json
+@@ -1,14 +1,15 @@
+ {
+   "name": "family-tree",
+-  "version": "1.0.1",
++  "version": "1.0.2",
+   "private": true,
+   "type": "module",
+   "description": "Interactive Arabic family tree on Cloudflare Pages + Functions + D1 (100% free tier).",
+   "scripts": {
+     "test": "node --test tests/*.test.mjs",
+     "test:integration": "node --test tests/integration.test.mjs",
++    "test:browser": "node tests/browser-smoke.mjs",
+     "check": "node tests/check.mjs",
+-    "predeploy": "node tests/check-config.mjs",
++    "predeploy": "node tests/check-config.mjs && node tests/check.mjs",
+     "db:create": "wrangler d1 create family-tree-db",
+     "db:migrate:local": "wrangler d1 migrations apply family-tree-db --local",
+     "db:migrate": "wrangler d1 migrations apply family-tree-db --remote",
+--- a/family-tree/public/_headers
++++ b/family-tree/public/_headers
+@@ -11,7 +11,7 @@
+   Cache-Control: public, max-age=31536000, immutable
+ 
+ /css/*
+-  Cache-Control: public, max-age=3600, must-revalidate
++  Cache-Control: public, no-cache
+ 
+ /js/*
+-  Cache-Control: public, max-age=3600, must-revalidate
++  Cache-Control: public, no-cache
+--- a/family-tree/public/index.html
++++ b/family-tree/public/index.html
+@@ -29,7 +29,7 @@
+     </div>
+     <div class="search" role="search">
+       <i data-icon="search" class="search-ico"></i>
+-      <input id="search-input" type="search" placeholder="ابحث عن اسم…" autocomplete="off" aria-label="البحث بالاسم"
++      <input id="search-input" type="search" role="combobox" placeholder="ابحث عن اسم…" autocomplete="off" aria-label="البحث بالاسم"
+              aria-controls="search-results" aria-expanded="false" aria-autocomplete="list" enterkeyhint="search">
+       <ul id="search-results" class="search-results glass" role="listbox" aria-label="نتائج البحث" hidden></ul>
+     </div>
+@@ -52,8 +52,7 @@
+ 
+   <div class="minimap glass" id="minimap-wrap"><canvas id="minimap" aria-label="خريطة مصغرة للشجرة. اضغط للانتقال."></canvas></div>
+ 
+-  <a class="whatsapp-fab" data-whatsapp target="_blank" rel="noopener noreferrer"
+-     href="https://wa.me/989178733909?text=%D8%A7%D9%84%D8%B3%D9%84%D8%A7%D9%85%20%D8%B9%D9%84%D9%8A%D9%83%D9%85%D8%8C%20%D8%A3%D8%AA%D9%88%D8%A7%D8%B5%D9%84%20%D9%85%D8%B9%D9%83%D9%85%20%D8%A8%D8%AE%D8%B5%D9%88%D8%B5%20%D9%85%D9%88%D9%82%D8%B9%20%D8%B4%D8%AC%D8%B1%D8%A9%20%D8%A7%D9%84%D8%B9%D8%A7%D8%A6%D9%84%D8%A9."
++  <a class="whatsapp-fab" data-whatsapp hidden target="_blank" rel="noopener noreferrer"
+      aria-label="تواصل مع المدير عبر واتساب">
+     <i data-icon="whatsapp"></i><span>تواصل مع المدير</span>
+   </a>
+@@ -105,7 +104,7 @@
+       </section>
+ 
+       <section class="drawer-section">
+-        <a class="menu-item whatsapp" data-whatsapp target="_blank" rel="noopener noreferrer" href="https://wa.me/989178733909"><i data-icon="whatsapp"></i><span>تواصل مع المدير (واتساب)</span></a>
++        <a class="menu-item whatsapp" data-whatsapp hidden target="_blank" rel="noopener noreferrer"><i data-icon="whatsapp"></i><span>تواصل مع المدير (واتساب)</span></a>
+       </section>
+       <p class="drawer-foot">اضغط على أي شخص لعرض بياناته · اسحب للتحريك · كبّر بالإصبعين</p>
+     </div>
+--- a/family-tree/public/js/api.js
++++ b/family-tree/public/js/api.js
+@@ -30,15 +30,28 @@
+     try { sessionStorage.setItem(keySlot,key); } catch { /* map still protects retries */ }
+     opts.headers['Idempotency-Key']=key;
+   }
+-  let res;
++  let res, data = null;
++  const controller = new AbortController();
++  opts.signal = controller.signal;
++  const timeout = setTimeout(() => controller.abort(), 30_000);
+   try {
+     res = await fetch(`/api${path}`, opts);
+-  } catch {
+-    throw new ApiError(0, 'تعذّر الاتصال بالخادم. تحقق من اتصالك بالإنترنت ثم حاول مجددًا.');
+-  }
+-  let data = null;
+-  if ((res.headers.get('Content-Type') || '').includes('application/json')) {
+-    try { data = await res.json(); } catch { data = null; }
++    if ((res.headers.get('Content-Type') || '').toLowerCase().includes('application/json')) {
++      try { data = await res.json(); } catch {
++        if (res.ok) throw new ApiError(0, 'استجابة الخادم غير مكتملة. أعد تحميل الشجرة قبل إعادة المحاولة.');
++      }
++    }
++    if (res.ok && (!data || typeof data !== 'object' || Array.isArray(data))) {
++      throw new ApiError(0, 'استجابة الخادم غير صالحة. أعد تحميل الشجرة قبل إعادة المحاولة.');
++    }
++  } catch (e) {
++    if (e instanceof ApiError) throw e;
++    const message = controller.signal.aborted
++      ? 'انتهت مهلة الاتصال. قد يكون الطلب قد حُفظ؛ أعد تحميل الشجرة قبل إعادة المحاولة.'
++      : 'تعذّر الاتصال بالخادم. تحقق من اتصالك بالإنترنت ثم حاول مجددًا.';
++    throw new ApiError(0, message);
++  } finally {
++    clearTimeout(timeout);
+   }
+   if (!res.ok) {
+     if (keySlot && res.status < 500 && res.status !== 409) {
+--- a/family-tree/public/js/app.js
++++ b/family-tree/public/js/app.js
+@@ -33,6 +33,7 @@
+ 
+ let canvas, ctx, viewport, photos, minimap, search;
+ let raf = 0;
++let loadSequence = 0;
+ 
+ /* ================================================================== */
+ /* Rendering loop                                                      */
+@@ -93,17 +94,34 @@
+ }
+ 
+ async function load(first = false) {
++  const sequence = ++loadSequence;
+   if (first) showOverlay('loading');
+   try {
+     const tree = await api.tree();
++    if (sequence !== loadSequence) return;
++    if (state.isAdmin && !tree.isAdmin) clearSelection();
+     state.data = tree;
+     state.isAdmin = !!tree.isAdmin;
+     state.siteTitle = tree.siteTitle || 'شجرة العائلة';
+     rebuild();
+     if (first || !state.didInitialView) initialView();
+   } catch (e) {
++    if (sequence !== loadSequence) return;
+     showOverlay('error', { message: e.message });
+   }
++}
++
++// Never leave private fields searchable/renderable after an auth transition,
++// even when the following public refresh fails.
++function clearAdminData() {
++  ++loadSequence;
++  state.isAdmin = false;
++  clearSelection();
++  if (state.data) {
++    state.data = { ...state.data, isAdmin: false,
++      persons: state.data.persons.map(p => ({ ...p, phone: '', notes: '' })) };
++    rebuild();
++  } else updateChrome();
+ }
+ 
+ function rebuild() {
+@@ -352,9 +370,7 @@
+ /* ================================================================== */
+ function handleAuthError(e) {
+   if (e instanceof ApiError && e.status === 401) {
+-    state.isAdmin = false;
+-    updateChrome();
+-    closePanels();
++    clearAdminData();
+   }
+   throw e;
+ }
+@@ -535,25 +551,24 @@
+   setupSegment('seg-digits', state.prefs.digits, (v) => { state.prefs.digits = v; refreshAfterPrefs(); });
+ 
+   const on = (id, fn) => $(id).addEventListener('click', () => { openDrawer(false); fn(); });
+-  on('m-pdf', () => openPdfDialog({
++  on('m-pdf', () => state.graph && openPdfDialog({
+     graph: state.graph, collapsed: state.collapsed,
+     selected: state.selectedPid != null ? state.graph.byId.get(state.selectedPid) : null,
+     siteTitle: state.siteTitle, prefs: state.prefs, colors: state.colors, photos,
+   }));
+-  on('m-expand', () => { state.collapsed.clear(); persistCollapsed(); rebuild(); toast('تم توسيع جميع الفروع.'); });
+-  on('m-fit', () => viewport.fit(state.layout.bounds, { padding: 40, maxScale: 1 }));
++  on('m-expand', () => { if (!state.data) return; state.collapsed.clear(); persistCollapsed(); rebuild(); toast('تم توسيع جميع الفروع.'); });
++  on('m-fit', () => state.layout && viewport.fit(state.layout.bounds, { padding: 40, maxScale: 1 }));
+   on('m-login', () => openLogin(() => load()));
+   on('m-password', openChangePassword);
+-  on('m-settings', () => openSiteSettings(state.siteTitle,state.data?.whatsappNumber, (r) => {
++  on('m-settings', () => state.data && openSiteSettings(state.siteTitle,state.data.whatsappNumber, (r) => {
+     state.siteTitle = r.siteTitle; state.data.whatsappNumber = r.whatsappNumber; updateChrome();
+   }));
+   on('m-export', exportBackup);
+   on('m-import', () => restoreBackup(() => { state.didInitialView = false; clearSelection(); load(); }));
+   on('m-add-root', addRoot);
+   on('m-logout', async () => {
+-    try { await api.logout(); } catch { /* ignore */ }
+-    state.isAdmin = false;
+-    clearSelection();
++    try { await api.logout(); } catch (e) { toast(`تعذّر تسجيل الخروج: ${e.message}`, 'error'); return; }
++    clearAdminData();
+     toast('تم تسجيل الخروج.');
+     load();
+   });
+--- a/family-tree/public/js/details.js
++++ b/family-tree/public/js/details.js
+@@ -67,7 +67,7 @@
+     row('المهنة', person.occupation),
+     ctx.isAdmin && person.phone ? row('الهاتف', h('a', { href: `tel:${person.phone.replace(/[^+0-9]/g, '')}`, text: person.phone, attrs: { dir: 'ltr' } })) : null);
+ 
+-  const notes = person.notes ? h('div', { class: 'notes' }, h('h3', { text: 'ملاحظات' }), h('p', { text: person.notes })) : null;
++  const notes = ctx.isAdmin && person.notes ? h('div', { class: 'notes' }, h('h3', { text: 'ملاحظات' }), h('p', { text: person.notes })) : null;
+ 
+   const rel = h('div', { class: 'relations' });
+   const group = (title, items) => {
+--- a/family-tree/public/js/search.js
++++ b/family-tree/public/js/search.js
+@@ -16,7 +16,7 @@
+     index = g ? g.persons.map((p) => ({ p, key: normalizeArabic(fullName(p)) })) : [];
+   };
+ 
+-  const close = () => { list.hidden = true; active = -1; input.setAttribute('aria-expanded', 'false'); };
++  const close = () => { list.hidden = true; active = -1; input.setAttribute('aria-expanded', 'false'); input.removeAttribute('aria-activedescendant'); };
+   const pick = (p) => { close(); input.value = ''; input.blur(); onPick(p.id); };
+ 
+   const render = () => {
+@@ -40,6 +40,8 @@
+     });
+     list.hidden = false;
+     input.setAttribute('aria-expanded', 'true');
++    if (active >= 0 && items[active]) input.setAttribute('aria-activedescendant', `sr-${active}`);
++    else input.removeAttribute('aria-activedescendant');
+   };
+ 
+   input.addEventListener('focus', rebuildIndex);
+--- a/family-tree/public/js/ui.js
++++ b/family-tree/public/js/ui.js
+@@ -62,7 +62,7 @@
+   const footer = h('div', { class: 'modal-footer' });
+   const bodyEl = h('div', { class: 'modal-body' }, body);
+   const closeBtn = h('button', { class: 'icon-btn modal-close', type: 'button', attrs: { 'aria-label': 'إغلاق' } }, icon('close'));
+-  const dialog = h('div', { class: `modal modal-${size} glass ${cls}`, attrs: { role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': titleId } },
++  const dialog = h('div', { class: `modal modal-${size} glass ${cls}`, attrs: { role: 'dialog', tabindex: '-1', 'aria-modal': 'true', 'aria-labelledby': titleId } },
+     h('div', { class: 'modal-header' }, h('h2', { id: titleId, text: title }), dismissible ? closeBtn : null),
+     bodyEl, footer);
+   const wrap = h('div', { class: 'modal-wrap' }, h('div', { class: 'modal-scrim' }), dialog);
+@@ -90,7 +90,7 @@
+     if (e.key === 'Tab') {
+       const f = [...dialog.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')]
+         .filter((x) => !x.disabled && x.offsetParent !== null);
+-      if (!f.length) return;
++      if (!f.length) { e.preventDefault(); dialog.focus({ preventScroll: true }); return; }
+       if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f[f.length - 1].focus(); }
+       else if (!e.shiftKey && document.activeElement === f[f.length - 1]) { e.preventDefault(); f[0].focus(); }
+     }
+@@ -109,7 +109,7 @@
+   requestAnimationFrame(() => {
+     wrap.classList.add('show');
+     const first = dialog.querySelector('[autofocus], input:not([type=hidden]):not([type=file]), select, textarea, .btn-primary');
+-    (first || closeBtn).focus({ preventScroll: true });
++    (first || (dismissible ? closeBtn : dialog)).focus({ preventScroll: true });
+   });
+   const setBusy = (busy, label) => {
+     setBusyState(busy);
+--- a/family-tree/src/server/auth.js
++++ b/family-tree/src/server/auth.js
+@@ -65,11 +65,16 @@
+   const parts = String(stored).split('$');
+   if (parts.length !== 4 || parts[0] !== 'pbkdf2_sha256') return false;
+   const iterations = Number(parts[1]);
+-  const salt = b64ToBytes(parts[2]);
+-  const expected = b64ToBytes(parts[3]);
+-  const key = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveBits']);
+-  const bits = new Uint8Array(await crypto.subtle.deriveBits({ name: 'PBKDF2', salt, iterations, hash: 'SHA-256' }, key, expected.length * 8));
+-  return timingSafeEqual(bits, expected);
++  if (!Number.isInteger(iterations) || iterations < 10000 || iterations > 100000 ||
++      parts[2].length > 64 || parts[3].length > 64) return false;
++  try {
++    const salt = b64ToBytes(parts[2]);
++    const expected = b64ToBytes(parts[3]);
++    if (salt.length !== 16 || expected.length !== 32) return false;
++    const key = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveBits']);
++    const bits = new Uint8Array(await crypto.subtle.deriveBits({ name: 'PBKDF2', salt, iterations, hash: 'SHA-256' }, key, 256));
++    return timingSafeEqual(bits, expected);
++  } catch { return false; }
+ }
+ 
+ /** Checks a candidate password against the stored hash or the env secret. */
+@@ -118,7 +123,7 @@
+   try {
+     const payload = JSON.parse(dec.decode(unb64url(parts[1])));
+     if (!payload || payload.sub !== 'admin' || typeof payload.exp !== 'number') return null;
+-    if (payload.exp < Math.floor(Date.now() / 1000)) return null;
++    if (!Number.isSafeInteger(payload.exp) || payload.exp <= Math.floor(Date.now() / 1000)) return null;
+     return payload;
+   } catch { return null; }
+ }
+@@ -141,10 +146,10 @@
+   return `; Path=/; HttpOnly; SameSite=Strict${secure}`;
+ }
+ 
+-export async function createSessionCookie(context) {
++export async function createSessionCookie(context, passwordVersion) {
+   const db = getDb(context.env);
+   const secret = await sessionSecret(context.env, db);
+-  const pv = (await getSetting(db, 'password_ver')) || '0';
++  const pv = passwordVersion ?? ((await getSetting(db, 'password_ver')) || '0');
+   const now = Math.floor(Date.now() / 1000);
+   const token = await signSession({ sub: 'admin', iat: now, exp: now + SESSION_TTL, pv }, secret);
+   return `${COOKIE_NAME}=${token}; Max-Age=${SESSION_TTL}${cookieAttrs(context.request)}`;
+--- a/family-tree/src/server/relations.js
++++ b/family-tree/src/server/relations.js
+@@ -13,7 +13,7 @@
+   const list = [...new Set(ids.filter((x) => x != null))];
+   if (!list.length) return new Map();
+   const { results } = await db.prepare(
+-    'SELECT id, first_name, birth_date, birth_prec, birth_cal FROM persons WHERE id IN (SELECT value FROM json_each(?1))'
++    'SELECT id, first_name, birth_date, birth_prec, birth_cal, is_deceased, death_date, death_prec, death_cal FROM persons WHERE id IN (SELECT value FROM json_each(?1))'
+   ).bind(JSON.stringify(list)).all();
+   return new Map(results.map((r) => [r.id, r]));
+ }
+@@ -21,7 +21,7 @@
+ /** child must not be born before a parent was born. */
+ export function assertParentOlder(parentRow, childRow) {
+   const p = rangeOf(parentRow), c = rangeOf(childRow);
+-  if (p && c && c[1] < p[0]) {
+-    throw new HttpError(400, `تاريخ ميلاد الابن/الابنة لا يمكن أن يسبق تاريخ ميلاد الوالد (${parentRow.first_name}).`);
++  if (p && c && c[1] <= p[0]) {
++    throw new HttpError(400, `تاريخ ميلاد الابن/الابنة يجب أن يكون بعد ميلاد الوالد (${parentRow.first_name}).`);
+   }
+ }
+--- a/family-tree/src/server/validate.js
++++ b/family-tree/src/server/validate.js
+@@ -92,7 +92,7 @@
+   };
+ }
+ 
+-/** Throws if the marriage date is before either spouse was born. */
++/** Reject a marriage outside the spouses' known lifespans. Partial dates may overlap. */
+ export function assertMarriageAfterBirth(marriage, ...persons) {
+   if (!marriage.marriage_date) return;
+   const m = recordRange({ date: marriage.marriage_date, prec: marriage.marriage_prec, cal: marriage.marriage_cal });
+@@ -101,5 +101,9 @@
+       const b = recordRange({ date: p.birth_date, prec: p.birth_prec, cal: p.birth_cal });
+       if (m[1] < b[0]) throw new HttpError(400, 'تاريخ الزواج يجب أن يكون بعد تاريخ ميلاد الزوجين.');
+     }
++    if (p && p.is_deceased && p.death_date) {
++      const d = recordRange({ date: p.death_date, prec: p.death_prec, cal: p.death_cal });
++      if (m[0] > d[1]) throw new HttpError(400, 'تاريخ الزواج لا يمكن أن يكون بعد وفاة أحد الزوجين.');
++    }
+   }
+ }
+--- a/family-tree/tests/api.test.mjs
++++ b/family-tree/tests/api.test.mjs
+@@ -0,0 +1,29 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { api, ApiError } from '../public/js/api.js';
++
++test('create retries retain their key after a malformed successful response', async () => {
++  const original = globalThis.fetch;
++  const keys = [];
++  try {
++    globalThis.fetch = async (_, opts) => {
++      keys.push(opts.headers['Idempotency-Key']);
++      return keys.length === 1
++        ? new Response('{', {status:201,headers:{'Content-Type':'application/json'}})
++        : new Response('{"ok":true,"id":1}',{status:201,headers:{'Content-Type':'application/json'}});
++    };
++    const payload = {person:{first_name:'retry-test',gender:'m'},link:{type:'root'}};
++    await assert.rejects(api.createPerson(payload),e=>e instanceof ApiError && e.status===0);
++    assert.equal((await api.createPerson(payload)).id,1);
++    assert.equal(keys[0],keys[1]);
++  } finally { globalThis.fetch=original; }
++});
++test('successful HTML, null and arrays do not masquerade as an API result', async () => {
++  const original = globalThis.fetch;
++  try {
++    for (const [body,type] of [['<html>Gateway</html>','text/html'],['null','application/json'],['[]','application/json']]) {
++      globalThis.fetch=async()=>new Response(body,{headers:{'Content-Type':type}});
++      await assert.rejects(api.tree(),e=>e instanceof ApiError && e.status===0);
++    }
++  } finally { globalThis.fetch=original; }
++});
+--- a/family-tree/tests/browser-smoke.mjs
++++ b/family-tree/tests/browser-smoke.mjs
+@@ -0,0 +1,126 @@
++// Optional real-browser test. Run: node tests/browser-smoke.mjs
++// Needs Python 3, Playwright and its Chromium browser installed.
++import { chromium } from 'playwright';
++import assert from 'node:assert/strict';
++import http from 'node:http';
++import { readFile } from 'node:fs/promises';
++import { fileURLToPath } from 'node:url';
++import { resolve, extname } from 'node:path';
++import { sqlite } from './helpers.mjs';
++import { onRequest as middleware } from '../functions/api/_middleware.js';
++
++const root = fileURLToPath(new URL('../public/',import.meta.url));
++const db = sqlite();
++db.exec("UPDATE persons SET phone='+989123456789',notes='RELEASE_PRIVATE_NOTE' WHERE id=1;");
++const env = {DB:db,ADMIN_PASSWORD:'release-test-password',SESSION_SECRET:'s'.repeat(40)};
++const mime = {'.html':'text/html; charset=utf-8','.js':'text/javascript','.css':'text/css',
++  '.woff':'font/woff','.svg':'image/svg+xml','.json':'application/json'};
++let base;
++const server=http.createServer(async(req,res)=>{
++  try {
++    const url=new URL(req.url,base);
++    if(url.pathname.startsWith('/api/')) {
++      const chunks=[];for await (const chunk of req)chunks.push(chunk);
++      const method=req.method;
++      const c={env,data:{},params:{},request:new Request(url,{
++        method,headers:req.headers,...(['GET','HEAD'].includes(method)?{}:{body:Buffer.concat(chunks)})
++      })};
++      let route=url.pathname.slice(5);
++      if(/^persons\/\d+$/.test(route)){c.params.id=route.split('/')[1];route='persons/[id]';}
++      if(/^marriages\/\d+$/.test(route)){c.params.id=route.split('/')[1];route='marriages/[id]';}
++      if(/^photo\/\d+$/.test(route)){c.params.id=route.split('/')[1];route='photo/[id]';}
++      if(['persons','marriages'].includes(route))route+='/index';
++      c.next=async()=>{
++        const handlers=await import(`../functions/api/${route}.js`);
++        const name='onRequest'+method[0]+method.slice(1).toLowerCase();
++        return handlers[name] ? handlers[name](c) : new Response('{}',{status:405});
++      };
++      const response=await middleware(c);
++      res.writeHead(response.status,Object.fromEntries(response.headers));
++      res.end(Buffer.from(await response.arrayBuffer()));
++    } else {
++      const path=resolve(root,'.'+decodeURIComponent(url.pathname==='/'?'/index.html':url.pathname));
++      if(!path.startsWith(root)){res.writeHead(403);res.end();return;}
++      const headers={'Content-Type':mime[extname(path)]||'application/octet-stream'};
++      if(extname(path)==='.html')headers['Content-Security-Policy']="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'";
++      res.writeHead(200,headers);res.end(await readFile(path));
++    }
++  } catch(e){res.writeHead(500,{'Content-Type':'application/json'});res.end(JSON.stringify({error:e.message}));}
++});
++await new Promise(r=>server.listen(0,'127.0.0.1',r));
++base=`http://127.0.0.1:${server.address().port}`;
++let browser;
++const results=[];
++try {
++  browser=await chromium.launch({headless:true,args:['--no-sandbox']});
++  for(const size of [{width:1440,height:900},{width:390,height:844}]) {
++    // Reset the demo fixture between the desktop and mobile flows.
++    db.exec("UPDATE persons SET first_name='أحمد' WHERE id=1;");
++    const c=await browser.newContext({viewport:size});
++    const page=await c.newPage();
++    const errors=[];
++    page.on('pageerror',e=>errors.push(e.message));
++    page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
++    await page.goto(base);
++    await page.waitForFunction(()=>document.getElementById('people-count').textContent.includes('20'));
++    assert.equal(await page.locator('#state-overlay').isVisible(),false);
++    assert.ok(await page.evaluate(async()=>{await document.fonts.load('16px Cairo');return document.fonts.check('16px Cairo');}));
++    // Search and keyboard navigation, including mobile search toggle.
++    if(size.width<760)await page.locator('#btn-search').click();
++    await page.locator('#search-input').fill('أحمد');
++    await page.locator('#search-input').press('ArrowDown');
++    assert.equal(await page.locator('#search-input').getAttribute('aria-activedescendant'),'sr-0');
++    await page.locator('#search-input').press('Enter');
++    await page.locator('#details').waitFor({state:'visible'});
++    assert.ok(!(await page.locator('#details').innerText()).includes('RELEASE_PRIVATE_NOTE'));
++    await page.locator('#btn-menu').click();
++    await page.locator('#m-login').click();
++    await page.locator('#login-pw').fill(env.ADMIN_PASSWORD);
++    await page.locator('.modal-footer .btn-primary').click();
++    await page.locator('#admin-badge').waitFor({state:'visible'});
++    await page.waitForFunction(()=>!document.body.classList.contains('modal-open'));
++    // Actual authenticated edit with safe, test-only SQLite data.
++    const tree=await page.evaluate(()=>fetch('/api/tree').then(r=>r.json()));
++    assert.equal(tree.persons[0].notes,'RELEASE_PRIVATE_NOTE');
++    const updated=await page.evaluate(async()=>{
++      const r=await fetch('/api/persons/1',{method:'PUT',headers:{'Content-Type':'application/json','X-Requested-With':'FamilyTree'},body:JSON.stringify({
++        person:{first_name:'Release Root',gender:'m',phone:'+989123456789',notes:'RELEASE_PRIVATE_NOTE'}
++      })});
++      return {status:r.status,data:await r.json()};
++    });
++    assert.equal(updated.status,200);
++    await page.reload();
++    await page.locator('#admin-badge').waitFor({state:'visible'});
++    // A failed logout must not claim success.
++    await page.route('**/api/auth/logout',r=>r.fulfill({status:503,contentType:'application/json',body:'{"error":"logout failed"}'}));
++    await page.locator('#btn-menu').click();await page.locator('#m-logout').click();
++    await page.waitForFunction(()=>document.getElementById('toast-root').textContent.includes('logout failed'));
++    assert.equal(await page.locator('#admin-badge').isVisible(),true);
++    await page.unroute('**/api/auth/logout');
++    // Logout with a failing public refresh still clears the local admin view.
++    await page.route('**/api/tree',r=>r.abort());
++    await page.locator('#btn-menu').click();await page.locator('#m-logout').click();
++    await page.waitForFunction(()=>!document.body.classList.contains('is-admin'));
++    await page.locator('#state-overlay.error').waitFor();
++    assert.equal(await page.locator('#admin-badge').isVisible(),false);
++    await page.unroute('**/api/tree');
++    await page.locator('#state-overlay .btn-primary').click();
++    await page.locator('#state-overlay').waitFor({state:'hidden'});
++    if(size.width<760)await page.locator('#btn-search').click();
++    await page.locator('#search-input').fill('Release Root');
++    await page.locator('#search-input').press('Enter');
++    await page.locator('#details').waitFor({state:'visible'});
++    assert.ok(!(await page.locator('#details').innerText()).includes('RELEASE_PRIVATE_NOTE'));
++    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
++    // Expected network errors above are not script failures.
++    const unexpected=errors.filter(e=>!e.includes('Failed to load resource')&&!e.includes('net::ERR_FAILED'));
++    assert.deepEqual(unexpected,[]);
++    results.push({viewport:size,pass:true,consoleErrors:unexpected});
++    await c.close();
++  }
++  console.log(JSON.stringify({browser:'Chromium',results},null,2));
++} finally {
++  await browser?.close();
++  await new Promise(r=>server.close(r));
++  db.close();
++}
+--- a/family-tree/tests/check-config.mjs
++++ b/family-tree/tests/check-config.mjs
+@@ -1,7 +1,7 @@
+ import { readFileSync } from 'node:fs';
+ const config=readFileSync(new URL('../wrangler.toml',import.meta.url),'utf8');
+ const id=/^\s*database_id\s*=\s*"([^"]+)"/m.exec(config)?.[1];
+-if(!id || id==='00000000-0000-0000-0000-000000000000' || !/^[a-f0-9-]{36}$/i.test(id)) {
++if(!id || id==='00000000-0000-0000-0000-000000000000' || !/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(id)) {
+   console.error('Set the real Cloudflare D1 database_id in wrangler.toml before deploying. Apply all migrations (0001 and 0002).');
+   process.exit(1);
+ }
+--- a/family-tree/tests/release.test.mjs
++++ b/family-tree/tests/release.test.mjs
+@@ -0,0 +1,121 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { sqlite, context } from './helpers.mjs';
++import { assertParentOlder } from '../src/server/relations.js';
++import { verifyPassword, verifySession, signSession } from '../src/server/auth.js';
++import { onRequestPut as updatePerson, onRequestDelete as deletePerson } from '../functions/api/persons/[id].js';
++import { onRequestPost as createMarriage } from '../functions/api/marriages/index.js';
++import { onRequestGet as exportData } from '../functions/api/admin/export.js';
++import { onRequestPost as changePassword } from '../functions/api/auth/password.js';
++import { onRequestPost as login } from '../functions/api/auth/login.js';
++import { isAdmin } from '../src/server/auth.js';
++
++test('malformed stored password hashes fail closed without throwing', async () => {
++  for (const hash of ['pbkdf2_sha256$0$@@$@@', 'pbkdf2_sha256$999999999$AAAA$AAAA',
++    'pbkdf2_sha256$60000$AA==$AA==', 'pbkdf2_sha256$NaN$AA==$AA==']) {
++    assert.equal(await verifyPassword('password', hash), false);
++  }
++});
++test('a session expires at its exact expiry second', async () => {
++  const secret = 's'.repeat(40);
++  const token = await signSession({ sub: 'admin', exp: Math.floor(Date.now()/1000) }, secret);
++  assert.equal(await verifySession(token, secret), null);
++});
++test('exact same-day parent and child births are rejected, overlapping partial dates allowed', () => {
++  const birth = { first_name: 'P', birth_date: '2000-01-01', birth_prec: 'd', birth_cal: 'g' };
++  assert.throws(() => assertParentOlder(birth, birth), e => e.status === 400);
++  assert.doesNotThrow(() => assertParentOlder({...birth, birth_prec: 'y'}, {...birth, birth_date:'2000-07-01'}));
++});
++test('marriage cannot occur after the known death of either spouse', async () => {
++  const db = sqlite(false);
++  try {
++    db.exec("INSERT INTO persons(id,first_name,gender,is_deceased,death_date,death_prec,death_cal) VALUES(1,'A','m',1,'2000-01-01','d','g'),(2,'B','f',0,NULL,NULL,NULL);");
++    await assert.rejects(createMarriage(context(db, {aId:1,bId:2,marriage:{date:{date:'2001-01-01',prec:'d',cal:'g'}}})), e => e.status === 400);
++    assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM marriages').first()).n, 0);
++  } finally { db.close(); }
++});
++test('editing a death date cannot invalidate an existing marriage', async () => {
++  const db = sqlite(false);
++  try {
++    db.exec("INSERT INTO persons(id,first_name,gender) VALUES(1,'A','m'),(2,'B','f'); INSERT INTO marriages(husband_id,wife_id,marriage_date,marriage_prec,marriage_cal) VALUES(1,2,'2001-01-01','d','g');");
++    await assert.rejects(updatePerson(context(db,{person:{first_name:'A',gender:'m',is_deceased:true,death:{date:'2000-01-01',prec:'d',cal:'g'}}},{method:'PUT',id:1})),e=>e.status===400);
++    assert.equal((await db.prepare('SELECT is_deceased FROM persons WHERE id=1').first()).is_deceased,0);
++  } finally { db.close(); }
++});
++test('an invalid deletion mode rejects without deleting or changing the version', async () => {
++  const db = sqlite();
++  try {
++    await assert.rejects(deletePerson(context(db,null,{method:'DELETE',id:1,path:'/api/persons/1?mode=branxh'})),e=>e.status===400);
++    assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM persons').first()).n,20);
++  } finally { db.close(); }
++});
++test('photo export rejects overflowing or malformed cursors instead of wrapping to zero', async () => {
++  const db = sqlite();
++  try {
++    const head = await (await exportData(context(db,null,{method:'GET',path:'/api/admin/export?part=data'}))).json();
++    for (const after of ['4294967296','1.5','bad','-1']) {
++      await assert.rejects(exportData(context(db,null,{method:'GET',path:`/api/admin/export?part=photos&version=${head.version}&after=${after}`})),e=>e.status===400);
++    }
++  } finally { db.close(); }
++});
++test('password reset invalidates the previous cookie and issues a valid replacement', async () => {
++  const db=sqlite(false);
++  const env={DB:db,ADMIN_PASSWORD:'initial-password',SESSION_SECRET:'z'.repeat(40),PBKDF2_ITERATIONS:10000};
++  try {
++    const c=context(db,{password:'initial-password'},{path:'/api/auth/login',admin:false});c.env=env;
++    const oldCookie=(await login(c)).headers.get('Set-Cookie').split(';')[0];
++    const auth=cookie=>({env,data:{},request:new Request('https://test.example/api/auth/me',{headers:{Cookie:cookie}})});
++    assert.equal(await isAdmin(auth(oldCookie)),true);
++    const p=context(db,{current:'initial-password',next:'new-password'},{path:'/api/auth/password'});p.env=env;
++    const newCookie=(await changePassword(p)).headers.get('Set-Cookie').split(';')[0];
++    assert.equal(await isAdmin(auth(oldCookie)),false);
++    assert.equal(await isAdmin(auth(newCookie)),true);
++    assert.equal((await db.prepare("SELECT value FROM settings WHERE key='password_ver'").first()).value,'1');
++  } finally {db.close();}
++});
++test('a concurrent reset cannot silently overwrite the winning password', async () => {
++  const db=sqlite(false);
++  const batch=db.batch;
++  let injected=false;
++  db.batch=async statements=>{
++    if(!injected && statements.some(s=>s.sql.includes("'password_hash'"))) {
++      injected=true;
++      db.exec("INSERT INTO settings(key,value) VALUES('password_hash','winner') ON CONFLICT(key) DO UPDATE SET value='winner'; UPDATE settings SET value='1' WHERE key='password_ver';");
++    }
++    return batch(statements);
++  };
++  try {
++    const c=context(db,{current:'initial-password',next:'new-password'});
++    c.env={DB:db,ADMIN_PASSWORD:'initial-password',PBKDF2_ITERATIONS:10000};
++    await assert.rejects(changePassword(c),e=>e.status===409);
++    assert.equal((await db.prepare("SELECT value FROM settings WHERE key='password_hash'").first()).value,'winner');
++    assert.equal((await db.prepare("SELECT value FROM settings WHERE key='password_ver'").first()).value,'1');
++  } finally {db.close();}
++});
++test('a login checked during a password reset does not receive the new version', async () => {
++  const db=sqlite(false),prepare=db.prepare;
++  let checks=0;
++  db.prepare=sql=>{
++    const s=prepare(sql);
++    const bind=s.bind;
++    s.bind=function(...values){
++      const bound=bind.apply(s,values);
++      if(sql==='SELECT value FROM settings WHERE key = ?1' && values[0]==='password_hash') {
++        const first=bound.first;
++        bound.first=async()=>{
++          const row=await first.call(bound);
++          if(++checks===1)db.exec("UPDATE settings SET value='1' WHERE key='password_ver';");
++          return row;
++        };
++      }
++      return bound;
++    };
++    return s;
++  };
++  const env={DB:db,ADMIN_PASSWORD:'initial-password',SESSION_SECRET:'z'.repeat(40)};
++  try {
++    const c=context(db,{password:'initial-password'},{path:'/api/auth/login',admin:false});c.env=env;
++    const cookie=(await login(c)).headers.get('Set-Cookie').split(';')[0];
++    assert.equal(await isAdmin({env,data:{},request:new Request('https://test.example',{headers:{Cookie:cookie}})}),false);
++  } finally {db.close();}
++});
+--- a/family-tree/tests/static.test.mjs
++++ b/family-tree/tests/static.test.mjs
+@@ -0,0 +1,18 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { readFileSync } from 'node:fs';
++
++test('contact links start hidden with no embedded personal number', () => {
++  const html=readFileSync(new URL('../public/index.html',import.meta.url),'utf8');
++  const links=[...html.matchAll(/<a\b[^>]*data-whatsapp[^>]*>/g)].map(m=>m[0]);
++  assert.equal(links.length,2);
++  for(const link of links) {
++    assert.match(link,/\bhidden\b/);
++    assert.doesNotMatch(link,/\bhref=/);
++  }
++  assert.doesNotMatch(html,/989178733909/);
++});
++test('unversioned script and style assets revalidate after deployment', () => {
++  const headers=readFileSync(new URL('../public/_headers',import.meta.url),'utf8');
++  for(const folder of ['js','css'])assert.match(headers,new RegExp(`/${folder}/\\*\\s+Cache-Control: public, no-cache`));
++});
+--- a/family-tree/tests/ui.test.mjs
++++ b/family-tree/tests/ui.test.mjs
+@@ -4,6 +4,8 @@
+ import { createDateField } from '../public/js/datefield.js';
+ import { makeRecord } from '../public/js/calendar.js';
+ import { openModal } from '../public/js/ui.js';
++import { renderDetails } from '../public/js/details.js';
++import { buildGraph } from '../public/js/layout.js';
+ 
+ test('year-only and month-only dates remain identical after calendar button clicks',()=>{
+   installDom();
+@@ -48,3 +50,24 @@
+   form.dispatchEvent({type:'submit'});assert.equal(submits,1);
+   m.close();
+ });
++test('public details never render notes even if stale data still contains them',()=>{
++  installDom();
++  const person={id:1,first_name:'P',gender:'m',phone:'+989123456789',notes:'SECRET_NOTE'};
++  const panel=new Element('section');
++  const ctx={graph:buildGraph([person],[]),prefs:{displayCal:'g',digits:'latin'},isAdmin:false};
++  renderDetails(panel,person,ctx);
++  assert.ok(!panel.textContent.includes('SECRET_NOTE'));
++  assert.ok(!panel.textContent.includes('+989123456789'));
++  renderDetails(panel,person,{...ctx,isAdmin:true});
++  assert.ok(panel.textContent.includes('SECRET_NOTE'));
++  assert.ok(panel.textContent.includes('+989123456789'));
++});
++test('a non-dismissible progress dialog has a focus target and traps Tab',()=>{
++  const {doc}=installDom();
++  const m=openModal({title:'progress',body:new Element('p'),dismissible:false});
++  assert.equal(doc.activeElement,m.el);
++  const event={type:'keydown',key:'Tab'};
++  doc.dispatchEvent(event);
++  assert.equal(event.defaultPrevented,true);
++  m.close();
++});

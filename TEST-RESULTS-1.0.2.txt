@@ -1,0 +1,298 @@
+TAP version 13
+# Subtest: create retries retain their key after a malformed successful response
+ok 1 - create retries retain their key after a malformed successful response
+  ---
+  duration_ms: 44.49132
+  type: 'test'
+  ...
+# Subtest: successful HTML, null and arrays do not masquerade as an API result
+ok 2 - successful HTML, null and arrays do not masquerade as an API result
+  ---
+  duration_ms: 2.014747
+  type: 'test'
+  ...
+# Subtest: sanitizer preserves hyphens, removes NUL/bidi controls, preserves notes newlines
+ok 3 - sanitizer preserves hyphens, removes NUL/bidi controls, preserves notes newlines
+  ---
+  duration_ms: 1.303265
+  type: 'test'
+  ...
+# Subtest: request limit counts UTF-8 bytes without trusting Content-Length
+ok 4 - request limit counts UTF-8 bytes without trusting Content-Length
+  ---
+  duration_ms: 23.6921
+  type: 'test'
+  ...
+# Subtest: request reader accepts chunks split inside UTF-8 characters
+ok 5 - request reader accepts chunks split inside UTF-8 characters
+  ---
+  duration_ms: 4.387943
+  type: 'test'
+  ...
+# Subtest: malformed cookie is treated as anonymous rather than throwing
+ok 6 - malformed cookie is treated as anonymous rather than throwing
+  ---
+  duration_ms: 1.341667
+  type: 'test'
+  ...
+# Subtest: session verification and password hash round-trip
+ok 7 - session verification and password hash round-trip
+  ---
+  duration_ms: 26.291596
+  type: 'test'
+  ...
+# Subtest: Gregorian and Jalali leap days and round trips
+ok 8 - Gregorian and Jalali leap days and round trips
+  ---
+  duration_ms: 9.798279
+  type: 'test'
+  ...
+# Subtest: photo and Arabic batches stay below exact UTF-8 byte budget
+ok 9 - photo and Arabic batches stay below exact UTF-8 byte budget
+  ---
+  duration_ms: 72.648817
+  type: 'test'
+  ...
+# Subtest: backup structure rejects duplicates and unsupported formats
+ok 10 - backup structure rejects duplicates and unsupported formats
+  ---
+  duration_ms: 0.501119
+  type: 'test'
+  ...
+# Subtest: sample backup semantics and visibility pass
+ok 11 - sample backup semantics and visibility pass
+  ---
+  duration_ms: 5.839349
+  type: 'test'
+  ...
+# Subtest: layout handles a 6000-generation chain without recursive stack overflow
+ok 12 - layout handles a 6000-generation chain without recursive stack overflow
+  ---
+  duration_ms: 208.559874
+  type: 'test'
+  ...
+# Subtest: sample geometry matches four snapshots from the original release
+ok 13 - sample geometry matches four snapshots from the original release
+  ---
+  duration_ms: 10.012919
+  type: 'test'
+  ...
+# Subtest: backup validation rejects cycles, missing parents and impossible marriages
+ok 14 - backup validation rejects cycles, missing parents and impossible marriages
+  ---
+  duration_ms: 0.637011
+  type: 'test'
+  ...
+# Subtest: PDF writer creates structurally indexed PDF without browser rendering
+ok 15 - PDF writer creates structurally indexed PDF without browser rendering
+  ---
+  duration_ms: 1.295827
+  type: 'test'
+  ...
+# Subtest: begin, invalid upload and incomplete finish NEVER delete live data
+ok 16 - begin, invalid upload and incomplete finish NEVER delete live data
+  ---
+  duration_ms: 644.774975
+  type: 'test'
+  ...
+# Subtest: successful atomic restore, photo flags, new epoch, version, idempotent finish
+ok 17 - successful atomic restore, photo flags, new epoch, version, idempotent finish
+  ---
+  duration_ms: 802.244682
+  type: 'test'
+  ...
+# Subtest: concurrent live edit prevents stale restore from replacing current data
+ok 18 - concurrent live edit prevents stale restore from replacing current data
+  ---
+  duration_ms: 678.526135
+  type: 'test'
+  ...
+# Subtest: a mid-commit SQL failure rolls back deletions and preserves live data
+ok 19 - a mid-commit SQL failure rolls back deletions and preserves live data
+  ---
+  duration_ms: 971.739915
+  type: 'test'
+  ...
+# Subtest: restored missing parent or impossible marriage rejects without destructive repair
+ok 20 - restored missing parent or impossible marriage rejects without destructive repair
+  ---
+  duration_ms: 573.157303
+  type: 'test'
+  ...
+# Subtest: person birth edit cannot move birth after existing marriage
+ok 21 - person birth edit cannot move birth after existing marriage
+  ---
+  duration_ms: 217.895139
+  type: 'test'
+  ...
+# Subtest: public tree excludes private notes/phone, admin tree includes them
+ok 22 - public tree excludes private notes/phone, admin tree includes them
+  ---
+  duration_ms: 214.259705
+  type: 'test'
+  ...
+# Subtest: photos bypass legacy edge cache and use no-store
+ok 23 - photos bypass legacy edge cache and use no-store
+  ---
+  duration_ms: 246.852791
+  type: 'test'
+  ...
+# Subtest: photo export rejects a changed backup revision
+ok 24 - photo export rejects a changed backup revision
+  ---
+  duration_ms: 270.985833
+  type: 'test'
+  ...
+# Subtest: unauthorized restore never creates a staging session
+ok 25 - unauthorized restore never creates a staging session
+  ---
+  duration_ms: 154.157169
+  type: 'test'
+  ...
+# Subtest: create retry replays successful response without repeating handler
+ok 26 - create retry replays successful response without repeating handler
+  ---
+  duration_ms: 359.338121
+  type: 'test'
+  ...
+# Subtest: ambiguous failed create reservation prevents unsafe retry
+ok 27 - ambiguous failed create reservation prevents unsafe retry
+  ---
+  duration_ms: 249.753619
+  type: 'test'
+  ...
+# Subtest: full create flow: replay, spouse with photo, child, parent, branch delete
+ok 28 - full create flow: replay, spouse with photo, child, parent, branch delete
+  ---
+  duration_ms: 706.009186
+  type: 'test'
+  ...
+# Subtest: middleware blocks cross-origin write and missing anti-CSRF header
+ok 29 - middleware blocks cross-origin write and missing anti-CSRF header
+  ---
+  duration_ms: 61.746678
+  type: 'test'
+  ...
+# Subtest: site settings save WhatsApp number, hide blank number and reject invalid input
+ok 30 - site settings save WhatsApp number, hide blank number and reject invalid input
+  ---
+  duration_ms: 176.478828
+  type: 'test'
+  ...
+# Subtest: malformed stored password hashes fail closed without throwing
+ok 31 - malformed stored password hashes fail closed without throwing
+  ---
+  duration_ms: 1.291416
+  type: 'test'
+  ...
+# Subtest: a session expires at its exact expiry second
+ok 32 - a session expires at its exact expiry second
+  ---
+  duration_ms: 7.42413
+  type: 'test'
+  ...
+# Subtest: exact same-day parent and child births are rejected, overlapping partial dates allowed
+ok 33 - exact same-day parent and child births are rejected, overlapping partial dates allowed
+  ---
+  duration_ms: 1.067064
+  type: 'test'
+  ...
+# Subtest: marriage cannot occur after the known death of either spouse
+ok 34 - marriage cannot occur after the known death of either spouse
+  ---
+  duration_ms: 239.505924
+  type: 'test'
+  ...
+# Subtest: editing a death date cannot invalidate an existing marriage
+ok 35 - editing a death date cannot invalidate an existing marriage
+  ---
+  duration_ms: 222.765501
+  type: 'test'
+  ...
+# Subtest: an invalid deletion mode rejects without deleting or changing the version
+ok 36 - an invalid deletion mode rejects without deleting or changing the version
+  ---
+  duration_ms: 157.925874
+  type: 'test'
+  ...
+# Subtest: photo export rejects overflowing or malformed cursors instead of wrapping to zero
+ok 37 - photo export rejects overflowing or malformed cursors instead of wrapping to zero
+  ---
+  duration_ms: 335.211974
+  type: 'test'
+  ...
+# Subtest: password reset invalidates the previous cookie and issues a valid replacement
+ok 38 - password reset invalidates the previous cookie and issues a valid replacement
+  ---
+  duration_ms: 530.96939
+  type: 'test'
+  ...
+# Subtest: a concurrent reset cannot silently overwrite the winning password
+ok 39 - a concurrent reset cannot silently overwrite the winning password
+  ---
+  duration_ms: 316.785978
+  type: 'test'
+  ...
+# Subtest: a login checked during a password reset does not receive the new version
+ok 40 - a login checked during a password reset does not receive the new version
+  ---
+  duration_ms: 300.663417
+  type: 'test'
+  ...
+# Subtest: contact links start hidden with no embedded personal number
+ok 41 - contact links start hidden with no embedded personal number
+  ---
+  duration_ms: 1.470424
+  type: 'test'
+  ...
+# Subtest: unversioned script and style assets revalidate after deployment
+ok 42 - unversioned script and style assets revalidate after deployment
+  ---
+  duration_ms: 0.408477
+  type: 'test'
+  ...
+# Subtest: year-only and month-only dates remain identical after calendar button clicks
+ok 43 - year-only and month-only dates remain identical after calendar button clicks
+  ---
+  duration_ms: 5.713912
+  type: 'test'
+  ...
+# Subtest: fully specified dates round-trip through both calendars
+ok 44 - fully specified dates round-trip through both calendars
+  ---
+  duration_ms: 0.89638
+  type: 'test'
+  ...
+# Subtest: explicit editing of a preserved partial date changes the date intentionally
+ok 45 - explicit editing of a preserved partial date changes the date intentionally
+  ---
+  duration_ms: 0.503594
+  type: 'test'
+  ...
+# Subtest: modal busy state blocks duplicate submit, click and Escape; restores disabled states
+ok 46 - modal busy state blocks duplicate submit, click and Escape; restores disabled states
+  ---
+  duration_ms: 1.29084
+  type: 'test'
+  ...
+# Subtest: public details never render notes even if stale data still contains them
+ok 47 - public details never render notes even if stale data still contains them
+  ---
+  duration_ms: 152.005015
+  type: 'test'
+  ...
+# Subtest: a non-dismissible progress dialog has a focus target and traps Tab
+ok 48 - a non-dismissible progress dialog has a focus target and traps Tab
+  ---
+  duration_ms: 0.547085
+  type: 'test'
+  ...
+1..48
+# tests 48
+# suites 0
+# pass 48
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 6427.77125

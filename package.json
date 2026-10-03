@@ -1,0 +1,24 @@
+{
+  "name": "family-tree",
+  "version": "1.0.2",
+  "private": true,
+  "type": "module",
+  "description": "Interactive Arabic family tree on Cloudflare Pages + Functions + D1 (100% free tier).",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "test:integration": "node --test tests/integration.test.mjs",
+    "test:browser": "node tests/browser-smoke.mjs",
+    "check": "node tests/check.mjs",
+    "predeploy": "node tests/check-config.mjs && node tests/check.mjs",
+    "db:create": "wrangler d1 create family-tree-db",
+    "db:migrate:local": "wrangler d1 migrations apply family-tree-db --local",
+    "db:migrate": "wrangler d1 migrations apply family-tree-db --remote",
+    "db:seed:local": "wrangler d1 execute family-tree-db --local --file=seed/sample-data.sql",
+    "db:seed": "wrangler d1 execute family-tree-db --remote --file=seed/sample-data.sql",
+    "dev": "wrangler pages dev",
+    "deploy": "wrangler pages deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^3.80.0"
+  }
+}

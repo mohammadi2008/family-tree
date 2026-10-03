@@ -1,0 +1,11 @@
+{
+  "name": "شجرة العائلة",
+  "short_name": "شجرة العائلة",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#eef2ff",
+  "theme_color": "#6366f1",
+  "icons": [{ "src": "/img/favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}
